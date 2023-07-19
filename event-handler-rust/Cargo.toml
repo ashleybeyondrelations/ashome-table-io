@@ -1,0 +1,13 @@
+[package]
+name = "event_handler" # the name of the package
+version = "0.1.0"    # the current version, obeying semver
+authors = ["Alice <a@example.com>", "Bob <b@example.com>"]
+
+[[bin]]
+name = "event_handler"
+test = false
+bench = false
+
+[dependencies]
+daemonize = "~0.5.0"
+
