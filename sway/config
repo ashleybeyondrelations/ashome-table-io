@@ -73,8 +73,8 @@ input type:touch map_to_output DSI-1
 	bindsym --no-repeat XF86AudioLowerVolume exec echo 'key:1,XF86AudioLowerVolume' | nc localhost 3333 
 	bindsym --release XF86AudioLowerVolume exec echo 'key:0,XF86AudioLowerVolume' | nc localhost 3333 
 
-	bindsym --no-repeat XF86PowerOff exec echo 'key:1,XF86PowerOff' | nc localhost 3333 
-	bindsym --release XF86PowerOff exec echo 'key:0,XF86PowerOff' | nc localhost 3333 
+#	bindsym --no-repeat XF86PowerOff exec echo 'key:1,XF86PowerOff' | nc localhost 3333 
+#	bindsym --release XF86PowerOff exec echo 'key:0,XF86PowerOff' | nc localhost 3333 
 
 #	bindsym XF86Standby exec $term
 #	bindsym XF86PowerOff exec $term
