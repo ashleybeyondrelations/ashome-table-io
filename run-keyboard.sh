@@ -5,8 +5,8 @@ if [[ -z $LAYOUT ]]; then
 LAYOUT=ash
 fi
 
-make -C wvkbd/ LAYOUT=ash
-./wvkbd/wvkbd-$LAYOUT
+make -C virtual-keyboard/wvkbd/ LAYOUT=ash
+./virtual-keyboard/wvkbd/wvkbd-$LAYOUT
 
 #kill -s SIGTERM `pidof wvkbd-ash`
 #-to toggle : 

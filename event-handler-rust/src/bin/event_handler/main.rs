@@ -138,7 +138,10 @@ impl GestureData{
 		if ( shortest_since_press >= long_hold_duration && shortest_since_release >= short_gap_duration )
 		{
 			//weve met the requirements; now we clear and process!
-			let gesture_actions = self.actions.clone();
+			let mut gesture_actions = self.actions.clone();
+//					gesture_actions.sort_by(|a, b| a.registered_at < b.registered_at)
+							gesture_actions.sort_by(|a, b| b.registered_at.cmp(&a.registered_at));
+
 			&self.actions.clear();
 
 				println!("evaluating combo");			
@@ -156,6 +159,8 @@ impl GestureData{
 	fn getAllPressed(&self)->Vec<GestureEvent>
 	{
 		let mut retval : Vec<GestureEvent> = self.actions.clone();
+//							retval.sort_by(|a, b| a.registered_at.cmp(&b.registered_at))
+
 		retval.retain(|pressed_event| 
 			pressed_event.state 
 			&& 
@@ -183,6 +188,7 @@ impl GestureData{
 	fn getAllReleased(&self)->Vec<GestureEvent>
 	{
 		let mut retval : Vec<GestureEvent> = self.actions.clone();
+//							retval.sort_by(|a, b| a.registered_at.cmp(&b.registered_at))
 		retval.retain(|released_event| 
 			!released_event.state 
 			&& 
@@ -308,7 +314,7 @@ fn resolve_signal(  stream:&mut TcpStream, signal : String) {
 					if key_signal==&signal[0..4]
 					{
 						let msg = format!("rec {}",signal[6..].to_string());
-						println!("rec {}",signal[6..].to_string());
+						println!("rec {}",signal[4..].to_string());
 						stream.write(msg.as_bytes()).unwrap();
 						unsafe {
 						let state_value = matches!(&signal[4..5], "true" | "t" | "1");
