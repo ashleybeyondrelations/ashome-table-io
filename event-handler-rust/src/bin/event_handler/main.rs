@@ -56,6 +56,7 @@ fn scan()
 	    
 	    let mut keep_alive = true;
     // accept connections and process them, spawning a new thread for each one
+	inputbot::KeybdKey::Numrow1Key.bind(|| KeySequence("Hello, world!").send());
     inputbot::KeybdKey::AKey.bind(|| println!("Pressed a") );
 	inputbot::KeybdKey::OtherKey(71).bind(|| println!("Pressed F5") );
 	inputbot::KeybdKey::OtherKey(124).bind(|| println!("Pressed power") );
