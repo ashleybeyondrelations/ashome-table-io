@@ -1,3 +1,4 @@
+#![allow(unused_parens)]
 extern crate daemonize;
 
 
@@ -10,6 +11,7 @@ use std::time::{Instant,Duration};
 use std::collections::HashMap;
 
 use daemonize::Daemonize;
+//use inputbot::{KeySequence, KeybdKey::*, MouseButton::*};
 
 fn main() {
     let stdout = File::create("/usr/local/ashux/log/event_handler.out").unwrap();
@@ -46,6 +48,8 @@ fn test()
 }
 fn scan()
 {
+
+//	Numrow1Key.
 	    let listener = TcpListener::bind("0.0.0.0:3333").unwrap();
 	    
 //	    listener.set_nonblocking(true).expect("Cannot set non-blocking");
@@ -71,6 +75,8 @@ fn scan()
 			break;
 		}
     }
+	inputbot::KeybdKey::OtherKey(71).bind(|| println!("Pressed F5") );
+	inputbot::KeybdKey::OtherKey(124).bind(|| println!("Pressed power") );
     // close the socket server
     drop(listener);
 }
@@ -215,6 +221,7 @@ impl GestureData{
 //if it was down, we do a little cleanup by setting as having gone up before recording the new one		
 		if state && self.getAllPressed().iter().any(|anypressed| key == anypressed.key)
 		{
+			
 			let curkey = GestureEvent{
 								key:key.to_string(),
 								state:false,
@@ -222,7 +229,6 @@ impl GestureData{
 								millis_from_start:millis_from_start-1,
 								};
 			self.actions.push(curkey);
-			
 		}
 		
 		let curkey = GestureEvent{
