@@ -56,11 +56,14 @@ fn scan()
 	    
 	    let mut keep_alive = true;
     // accept connections and process them, spawning a new thread for each one
-    println!("Server listening on port 3333");
-	inputbot::KeybdKey::AKey.bind(|| println!("Pressed a") );
+    inputbot::KeybdKey::AKey.bind(|| println!("Pressed a") );
 	inputbot::KeybdKey::OtherKey(71).bind(|| println!("Pressed F5") );
 	inputbot::KeybdKey::OtherKey(124).bind(|| println!("Pressed power") );
-    for stream in listener.incoming() {
+	println!("watching keys");
+	inputbot::handle_input_events();
+
+	println!("Server listening on port 3333");
+	for stream in listener.incoming() {
         match stream {
             Ok(stream) => {
                 println!("New connection: {}", stream.peer_addr().unwrap());
