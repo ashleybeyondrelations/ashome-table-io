@@ -11,7 +11,6 @@ use std::time::{Instant,Duration};
 use std::collections::HashMap;
 
 use daemonize::Daemonize;
-//use inputbot::{KeySequence, KeybdKey::*, MouseButton::*};
 
 fn main() {
     let stdout = File::create("/usr/local/ashux/log/event_handler.out").unwrap();
@@ -55,13 +54,6 @@ fn scan()
 //	    listener.set_nonblocking(true).expect("Cannot set non-blocking");
 	    
 	    let mut keep_alive = true;
-    // accept connections and process them, spawning a new thread for each one
-	inputbot::KeybdKey::Numrow1Key.bind(|| inputbot::KeySequence("Hello, world!").send());
-    inputbot::KeybdKey::AKey.bind(|| println!("Pressed a") );
-	inputbot::KeybdKey::OtherKey(71).bind(|| println!("Pressed F5") );
-	inputbot::KeybdKey::OtherKey(124).bind(|| println!("Pressed power") );
-	println!("watching keys");
-	inputbot::handle_input_events();
 
 	println!("Server listening on port 3333");
 	for stream in listener.incoming() {
