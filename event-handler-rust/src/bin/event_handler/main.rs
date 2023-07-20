@@ -6,10 +6,13 @@ use std::net::{TcpListener, TcpStream, Shutdown};
 use std::io::{Read, Write};
 use std::fs::File;
 use std::{thread, time};
+use std::borrow::{Borrow, BorrowMut};
 use std::str;
 use std::time::{Instant,Duration};
 use std::collections::HashMap;
-
+use std::iter::Copied;
+use std::process::Command;
+use std::ptr::null;
 use daemonize::Daemonize;
 
 fn main() {
@@ -18,20 +21,22 @@ fn main() {
 
     let daemonize = Daemonize::new()
         .pid_file("/usr/local/ashux/event_handler/daemon.pid") // Every method except `new` and `start`
-        .chown_pid_file(true)      // is optional, see `Daemonize` documentation
+        .chown_pid_file(false)      // is optional, see `Daemonize` documentation
         .working_directory("/usr/local/ashux/event_handler") // for default behaviour.
-        .user("nobody")
-        .group("daemon") // Group name
+//        .user("ashley")
+//        .group("daemon") // Group name
 //        .group(2)        // or group id.
         .umask(0o777)    // Set umask, `0o027` by default.
         .stdout(stdout)  // Redirect stdout to `/tmp/daemon.out`.
         .stderr(stderr)  // Redirect stderr to `/tmp/daemon.err`.
         .privileged_action(|| "Executed before drop privileges");
 
-    match daemonize.start() {
-        Ok(_) => scan(),
-        Err(e) => eprintln!("Error, {}", e),
-    }
+	unsafe {
+		match daemonize.start() {
+			Ok(_) => scan(),
+			Err(e) => eprintln!("Error, {}", e),
+		}
+	}
 }
 fn test()
 {
@@ -45,8 +50,19 @@ fn test()
                 println!("{}: {:?}", instring, instring.as_bytes());
 	
 }
-fn scan()
+unsafe fn scan()
 {
+
+	STATIC_DATA.commands = vec![
+		CommandData{ gesture: GestureData{actions:vec![
+			GestureEvent{key: "XF86AudioRaiseVolume".parse().unwrap(), state: false,registered_at: Instant::now(),millis_from_start: 0 },
+			GestureEvent{key: "XF86AudioRaiseVolume".parse().unwrap(), state: true,registered_at: Instant::now(),millis_from_start: 0 }
+		] },
+			command: Command::new("konsole"),
+			desc: "Launch terminal".parse().unwrap()
+		}
+	];
+
 
 //	Numrow1Key.
 	    let listener = TcpListener::bind("0.0.0.0:3333").unwrap();
@@ -87,22 +103,42 @@ pub struct GestureData {
 //    active: bool,
 }
 
-static long_hold_duration: Duration = time::Duration::from_millis(1500);
+pub struct CommandData {
+	gesture: GestureData,
+	command: Command,
+	desc:String
+}
 
-static short_gap_duration: Duration = time::Duration::from_millis(500);
 
+
+pub struct StaticData {
+	commands: Vec<CommandData>
+}
+
+
+static LONG_HOLD_DURATION: Duration = time::Duration::from_millis(1500);
+
+static SHORT_GAP_DURATION: Duration = time::Duration::from_millis(500);
+
+
+impl PartialEq for GestureEvent
+{
+	fn eq(&self, other: &Self) -> bool {
+		self.key == other.key && self.state == other.state
+	}
+}
 
 
 impl GestureData{
 	//the intent is to test the event after 
 	//the last released key was released longer ago than the minimum between presses 
 	//AND (the last key held has been held longer than required for a long press OR all the actions are released )
-	fn evaluate(&mut self)
+	unsafe fn evaluate(&mut self)
 	{
 		if (self.actions[0].state)
 		{
 			//sleep for long press
-			thread::sleep(long_hold_duration);
+			thread::sleep(LONG_HOLD_DURATION);
 		}
 		if (self.actions.len() == 0 )
 		{
@@ -116,7 +152,7 @@ impl GestureData{
 //			println!("{}",cur_action.key);
 //		}
 
-		let mut shortest_since_release = short_gap_duration;
+		let mut shortest_since_release = SHORT_GAP_DURATION;
 
 		let now = Instant::now(); 
 		
@@ -128,7 +164,7 @@ impl GestureData{
 			}
 		}
 
-		let mut shortest_since_press = long_hold_duration;
+		let mut shortest_since_press = LONG_HOLD_DURATION;
 		
 		for cur_action in &self.getAllPressed()
 		{
@@ -138,7 +174,7 @@ impl GestureData{
 			}
 		}
 		
-		if ( shortest_since_press >= long_hold_duration && shortest_since_release >= short_gap_duration )
+		if ( shortest_since_press >= LONG_HOLD_DURATION && shortest_since_release >= SHORT_GAP_DURATION)
 		{
 			//weve met the requirements; now we clear and process!
 			let mut gesture_actions = self.actions.clone();
@@ -149,10 +185,32 @@ impl GestureData{
 
 				println!("evaluating combo");			
 			
-			for index in 0..gesture_actions.len() 
+
+			for index in 0..gesture_actions.len()
 			{
 				println!("key - {} : state : {}",gesture_actions[index].key,gesture_actions[index].state);
 				
+			}
+
+			println!("showing command");
+
+			for index in 0..STATIC_DATA.commands[0].gesture.actions.len()
+			{
+				println!("key - {} : state : {}",STATIC_DATA.commands[0].gesture.actions[index].key,STATIC_DATA.commands[0].gesture.actions[index].state);
+
+			}
+
+
+//			let mut matchedGesture :Vec<CommandData> = STATIC_DATA.commands.iter().filter(|matched| matched.gesture.actions == gesture_actions).collect();
+
+			for curcommand in STATIC_DATA.commands.iter().filter(|matched| matched.gesture.actions == gesture_actions)
+			{
+				let mut cmd = Command::new(curcommand.command.get_program());
+				cmd.args(curcommand.command.get_args());
+				cmd.spawn()
+					.expect("sh command failed to start");
+				println!("matched on - {} ",curcommand.command.get_program().to_string_lossy());
+
 			}
 		}
 		
@@ -281,9 +339,15 @@ return retval;
 }
 
 static mut CURRENT_EVENT: GestureData = GestureData{ 
-	actions:Vec::new(),
+	actions:Vec::new()
 //	startTime: Instant::now(),
 	 };
+
+static mut STATIC_DATA: StaticData = StaticData{
+	commands: Vec::new()
+//	startTime: Instant::now(),
+};
+
 //                    handle_client(listener,stream)
 
 fn is_exit_signal(  stream:&mut TcpStream, signal : String) -> bool
@@ -313,16 +377,25 @@ fn resolve_signal(  stream:&mut TcpStream, signal : String) {
 //					println!("sig : {}",signal);
 //            stream.write(signal.as_bytes()).unwrap();
 
-					let key_signal = "key:";
-					if key_signal==&signal[0..4]
+					let key_signal = "key";
+
+	let rcd_data : Vec<&str> = signal.split(":").collect();
+					if key_signal==rcd_data[0]
 					{
+						//write back to nc client
 						let msg = format!("rec {}",signal[6..].to_string());
-						println!("rec {}",signal[4..].to_string());
 						stream.write(msg.as_bytes()).unwrap();
+
+
+						println!("rec {}",signal[4..].to_string());
 						unsafe {
-						let state_value = matches!(&signal[4..5], "true" | "t" | "1");
+
+
+							let state_value = matches!(rcd_data[1], "true" | "t" | "1");
+							let key = rcd_data[2].to_string();
+
 						CURRENT_EVENT.register(
-							signal[6..].to_string(),
+							key,
 							state_value,			
 							);				
 							CURRENT_EVENT.evaluate();

@@ -3,5 +3,5 @@
 sudo kill -s SIGTERM `pidof event_handler`
 
 cd event-handler-rust
-sudo cargo run
+cargo run
 cd ..
