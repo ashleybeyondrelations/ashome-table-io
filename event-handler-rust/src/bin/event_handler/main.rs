@@ -57,6 +57,8 @@ fn scan()
 	    let mut keep_alive = true;
     // accept connections and process them, spawning a new thread for each one
     println!("Server listening on port 3333");
+	inputbot::KeybdKey::OtherKey(71).bind(|| println!("Pressed F5") );
+	inputbot::KeybdKey::OtherKey(124).bind(|| println!("Pressed power") );
     for stream in listener.incoming() {
         match stream {
             Ok(stream) => {
@@ -75,8 +77,6 @@ fn scan()
 			break;
 		}
     }
-	inputbot::KeybdKey::OtherKey(71).bind(|| println!("Pressed F5") );
-	inputbot::KeybdKey::OtherKey(124).bind(|| println!("Pressed power") );
     // close the socket server
     drop(listener);
 }
