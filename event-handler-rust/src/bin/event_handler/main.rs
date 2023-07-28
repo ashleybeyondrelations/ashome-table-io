@@ -84,11 +84,11 @@ unsafe fn scan()
                 /* connection failed */
             }
         }
-        if !keep_alive
-        {
+		if !keep_alive
+		{
 			println!("kill seen!");
 			break;
-		}
+		} else {}
     }
     // close the socket server
     drop(listener);
@@ -135,10 +135,16 @@ impl GestureData{
 	//AND (the last key held has been held longer than required for a long press OR all the actions are released )
 	unsafe fn evaluate(&mut self)
 	{
-		if (self.actions[0].state)
+		if (self.actions[self.actions.len()-1].state)
 		{
+			println!("long wait");
+
 			//sleep for long press
 			thread::sleep(LONG_HOLD_DURATION);
+		}
+		else {
+			println!("short wait");
+			thread::sleep(SHORT_GAP_DURATION);
 		}
 		if (self.actions.len() == 0 )
 		{
@@ -165,9 +171,12 @@ impl GestureData{
 		}
 
 		let mut shortest_since_press = LONG_HOLD_DURATION;
-		
+
+
 		for cur_action in &self.getAllPressed()
 		{
+			println!("{} still pressed",cur_action.key);
+
 			if ( now.duration_since(cur_action.registered_at) < shortest_since_press )
 			{
 				shortest_since_press = now.duration_since(cur_action.registered_at);
@@ -192,13 +201,6 @@ impl GestureData{
 				
 			}
 
-			println!("showing command");
-
-			for index in 0..STATIC_DATA.commands[0].gesture.actions.len()
-			{
-				println!("key - {} : state : {}",STATIC_DATA.commands[0].gesture.actions[index].key,STATIC_DATA.commands[0].gesture.actions[index].state);
-
-			}
 
 
 //			let mut matchedGesture :Vec<CommandData> = STATIC_DATA.commands.iter().filter(|matched| matched.gesture.actions == gesture_actions).collect();
